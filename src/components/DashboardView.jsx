@@ -169,6 +169,8 @@ export default function DashboardView({ adminAddress, onLogout }) {
               <thead className="bg-slate-800/50 text-slate-400 border-b border-slate-800">
                 <tr>
                   <th className="p-4">Invoice ID</th>
+                  <th className="p-4">Name</th>
+                  <th className="p-4">Email</th>
                   <th className="p-4">Amount</th>
                   <th className="p-4">From</th>
                   <th className="p-4">Status</th>
@@ -179,12 +181,22 @@ export default function DashboardView({ adminAddress, onLogout }) {
               <tbody className="divide-y divide-slate-800 font-mono text-xs">
                 {payments.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="p-6 text-center text-slate-500 font-sans">No incoming payments recorded yet.</td>
+                    <td colSpan="8" className="p-6 text-center text-slate-500 font-sans">No incoming payments recorded yet.</td>
                   </tr>
                 ) : (
                   payments.map((p) => (
                     <tr key={p._id} className="hover:bg-slate-800/30">
                       <td className="p-4 text-slate-400 truncate max-w-[100px]">{p._id}</td>
+                      <td className="p-4 font-sans truncate max-w-[120px]">{p.payerName || 'N/A'}</td>
+                      <td className="p-4 font-sans truncate max-w-[160px]">
+                        {p.payerEmail ? (
+                          <a href={'mailto:' + p.payerEmail} className="text-blue-400 hover:text-blue-300 underline">
+                            {p.payerEmail}
+                          </a>
+                        ) : (
+                          'N/A'
+                        )}
+                      </td>
                       <td className="p-4 font-bold text-emerald-400">{p.expectedAmount} USDT</td>
                       <td className="p-4 truncate max-w-[140px]">
                         {p.fromAddress ? (
@@ -228,6 +240,8 @@ export default function DashboardView({ adminAddress, onLogout }) {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-800/50 text-slate-400 border-b border-slate-800">
                 <tr>
+                  <th className="p-4">Name</th>
+                  <th className="p-4">Email</th>
                   <th className="p-4">Destination Wallet</th>
                   <th className="p-4">Amount</th>
                   <th className="p-4">Status</th>
@@ -238,13 +252,23 @@ export default function DashboardView({ adminAddress, onLogout }) {
               <tbody className="divide-y divide-slate-800 text-xs">
                 {requests.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="p-6 text-center text-slate-500">No payout requests pending.</td>
+                    <td colSpan="7" className="p-6 text-center text-slate-500">No payout requests pending.</td>
                   </tr>
                 ) : (
                   requests.map((r) => {
                     const isSettling = settlingIds.has(r._id);
                     return (
                       <tr key={r._id} className="hover:bg-slate-800/30">
+                        <td className="p-4 font-sans truncate max-w-[120px]">{r.requesterName || 'N/A'}</td>
+                        <td className="p-4 font-sans truncate max-w-[160px]">
+                          {r.requesterEmail ? (
+                            <a href={'mailto:' + r.requesterEmail} className="text-blue-400 hover:text-blue-300 underline">
+                              {r.requesterEmail}
+                            </a>
+                          ) : (
+                            'N/A'
+                          )}
+                        </td>
                         <td className="p-4 font-mono truncate max-w-[200px]">
                           <a href={explorerAddressUrl(r.destinationAddress)} target="_blank" rel="noreferrer" className="text-blue-400 hover:text-blue-300 underline">
                             {r.destinationAddress}
