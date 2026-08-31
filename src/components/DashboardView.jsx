@@ -10,6 +10,9 @@ export default function DashboardView({ adminAddress, onLogout }) {
   const [payments, setPayments] = useState([]);
   const [requests, setRequests] = useState([]);
   const [newAmount, setNewAmount] = useState('');
+  const [newPayerName, setNewPayerName] = useState('');
+  const [newPayerEmail, setNewPayerEmail] = useState('');
+  const [createError, setCreateError] = useState('');
   const [activeTab, setActiveTab] = useState('incoming');
   const [loading, setLoading] = useState(false);
   const [settlingIds, setSettlingIds] = useState(new Set());
@@ -98,18 +101,35 @@ export default function DashboardView({ adminAddress, onLogout }) {
 
   const handleGenerateInvoice = async (e) => {
     e.preventDefault();
+    setCreateError('');
+
+    if (!newPayerName.trim()) {
+      setCreateError('Please enter the customer\'s name.');
+      return;
+    }
+    if (!newPayerEmail.trim()) {
+      setCreateError('Please enter the customer\'s email.');
+      return;
+    }
+
     const res = await fetch(API_URL + '/payments/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: parseFloat(newAmount) }),
+      body: JSON.stringify({
+        amount: parseFloat(newAmount),
+        payerName: newPayerName.trim(),
+        payerEmail: newPayerEmail.trim(),
+      }),
     });
     const data = await res.json();
     if (!res.ok) {
-      alert(data.error || 'Failed to create invoice');
+      setCreateError(data.error || 'Failed to create invoice');
       return;
     }
     setCreatedLink(CUSTOMER_APP_URL + '/?invoice=' + data.id);
     setNewAmount('');
+    setNewPayerName('');
+    setNewPayerEmail('');
   };
 
   const getStatusClass = (status) => {
@@ -328,6 +348,30 @@ export default function DashboardView({ adminAddress, onLogout }) {
             <h3 className="text-lg font-bold text-white mb-4">Generate Customer Payment Link</h3>
             <form onSubmit={handleGenerateInvoice} className="space-y-4">
               <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-2">Customer Name</label>
+                <input
+                  type="text"
+                  placeholder="Jane Doe"
+                  value={newPayerName}
+                  onChange={(e) => setNewPayerName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-2">Customer Email</label>
+                <input
+                  type="email"
+                  placeholder="jane@example.com"
+                  value={newPayerEmail}
+                  onChange={(e) => setNewPayerEmail(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                  required
+                />
+              </div>
+
+              <div>
                 <label className="block text-xs font-semibold text-slate-400 mb-2">Invoice Amount (USDT)</label>
                 <input
                   type="number"
@@ -340,6 +384,9 @@ export default function DashboardView({ adminAddress, onLogout }) {
                   required
                 />
               </div>
+
+              {createError && <p className="text-red-400 text-sm bg-red-950/50 border border-red-800 p-3 rounded-lg">{createError}</p>}
+
               <button type="submit" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-3 rounded-xl transition">
                 Create Link
               </button>
