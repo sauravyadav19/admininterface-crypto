@@ -69,32 +69,32 @@ export default function DashboardView({ adminAddress, onLogout }) {
   };
 
   const handleSavePublicBalance = async () => {
-  const value = parseFloat(publicBalance);
-  if (isNaN(value) || value < 0) {
-    setPublicBalanceMsg('Enter a valid non-negative number.');
-    return;
-  }
-  setSavingPublicBalance(true);
-  setPublicBalanceMsg('');
-  try {
-    const res = await fetch(API_URL + '/admin/settings/public-balance', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ publicAdminBalance: value }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setPublicBalanceMsg(data.error || 'Failed to update.');
+    const value = parseFloat(publicBalance);
+    if (isNaN(value) || value < 0) {
+      setPublicBalanceMsg('Enter a valid non-negative number.');
       return;
     }
-    setPublicBalanceMsg('Saved — now live on the public site.');
-  } catch (err) {
-    setPublicBalanceMsg('Failed to update.');
-  } finally {
-    setSavingPublicBalance(false);
-  }
-};
+    setSavingPublicBalance(true);
+    setPublicBalanceMsg('');
+    try {
+      const res = await fetch(API_URL + '/admin/settings/public-balance', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ publicAdminBalance: value }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPublicBalanceMsg(data.error || 'Failed to update.');
+        return;
+      }
+      setPublicBalanceMsg('Saved — now live on the public site.');
+    } catch (err) {
+      setPublicBalanceMsg('Failed to update.');
+    } finally {
+      setSavingPublicBalance(false);
+    }
+  };
 
   const handleApprovePayout = (request) => withSettleGuard(request._id, async () => {
     if (!window.tronWeb || !window.tronWeb.ready) {
@@ -129,34 +129,34 @@ export default function DashboardView({ adminAddress, onLogout }) {
   });
 
   const handleSaveBalance = async (userId) => {
-  const raw = balanceEdits[userId];
-  const value = parseFloat(raw);
-  if (isNaN(value) || value < 0) {
-    alert('Enter a valid non-negative number.');
-    return;
-  }
-
-  setSavingUserId(userId);
-  try {
-    const res = await fetch(API_URL + '/admin/users/' + userId + '/balance', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ walletBalance: value }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      alert(data.error || 'Failed to update balance');
+    const raw = balanceEdits[userId];
+    const value = parseFloat(raw);
+    if (isNaN(value) || value < 0) {
+      alert('Enter a valid non-negative number.');
       return;
     }
-    fetchData();
-  } catch (err) {
-    console.error(err);
-    alert('Failed to update balance.');
-  } finally {
-    setSavingUserId(null);
-  }
-};
+
+    setSavingUserId(userId);
+    try {
+      const res = await fetch(API_URL + '/admin/users/' + userId + '/balance', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ walletBalance: value }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to update balance');
+        return;
+      }
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update balance.');
+    } finally {
+      setSavingUserId(null);
+    }
+  };
 
   const handleRejectPayout = (id) => withSettleGuard(id, async () => {
     if (!confirm('Reject this request?')) return;
@@ -252,9 +252,10 @@ export default function DashboardView({ adminAddress, onLogout }) {
             <PlusCircle className="w-4 h-4" /> Create Payment Link
           </button>
           <button
-              onClick={() => setActiveTab('users')}
-              className={'px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ' + (activeTab === 'users' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white')}>
-              <Users className="w-4 h-4" /> Users ({users.length})
+            onClick={() => setActiveTab('users')}
+            className={'px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ' + (activeTab === 'users' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white')}
+          >
+            <Users className="w-4 h-4" /> Users ({users.length})
           </button>
         </div>
 
@@ -330,104 +331,70 @@ export default function DashboardView({ adminAddress, onLogout }) {
           </div>
         )}
 
-      {activeTab === 'users' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-800/50 text-slate-400 border-b border-slate-800">
-              <tr>
-                <th className="p-4">Name</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Phone</th>
-                <th className="p-4">Wallet Balance</th>
-                <th className="p-4">Signed Up</th>
-                <th className="p-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800 text-xs">
-              {users.length === 0 ? (
+        {activeTab === 'users' && (
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-800/50 text-slate-400 border-b border-slate-800">
                 <tr>
-                  <td colSpan="6" className="p-6 text-center text-slate-500">No users signed up yet.</td>
+                  <th className="p-4">Name</th>
+                  <th className="p-4">Email</th>
+                  <th className="p-4">Phone</th>
+                  <th className="p-4">Wallet Balance</th>
+                  <th className="p-4">Signed Up</th>
+                  <th className="p-4 text-right">Actions</th>
                 </tr>
-              ) : (
-                users.map((u) => {
-                  const editValue = balanceEdits[u.id] !== undefined ? balanceEdits[u.id] : String(u.walletBalance);
-                  const isSaving = savingUserId === u.id;
-                  return (
-                    <tr key={u.id} className="hover:bg-slate-800/30">
-                      <td className="p-4 font-sans truncate max-w-[140px]">{u.name}</td>
-                      <td className="p-4 font-mono truncate max-w-[180px]">
-                        <a href={'mailto:' + u.email} className="text-blue-400 hover:text-blue-300 underline">
-                          {u.email}
-                        </a>
-                      </td>
-                      <td className="p-4 font-mono">{u.phone}</td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-500 font-sans">$</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={editValue}
-                            onChange={(e) =>
-                              setBalanceEdits((prev) => ({ ...prev, [u.id]: e.target.value }))
-                            }
-                            className="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-emerald-400 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          />
-                        </div>
-                      </td>
-                      <td className="p-4 text-slate-500 font-sans">{new Date(u.createdAt).toLocaleDateString()}</td>
-                      <td className="p-4 text-right">
-                        <button
-                          onClick={() => handleSaveBalance(u.id)}
-                          disabled={isSaving}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 font-sans"
-                        >
-                          {isSaving ? 'Saving...' : 'Save'}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}   
-
-      {activeTab === 'create' && (
-  <div className="max-w-md mx-auto space-y-6">
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-      <h3 className="text-lg font-bold text-white mb-1">Public Site Balance</h3>
-      <p className="text-xs text-slate-500 mb-4">
-        This number is shown publicly on the homepage to every visitor.
-      </p>
-      <div className="flex items-center gap-2">
-        <span className="text-slate-500 font-mono">$</span>
-        <input
-          type="number"
-          step="0.01"
-          min="0"
-          value={publicBalance}
-          onChange={(e) => setPublicBalance(e.target.value)}
-          className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-emerald-400 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        />
-        <button
-          onClick={handleSavePublicBalance}
-          disabled={savingPublicBalance}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50"
-        >
-          {savingPublicBalance ? 'Saving...' : 'Update'}
-        </button>
-      </div>
-      {publicBalanceMsg && (
-        <p className={'text-xs mt-2 ' + (publicBalanceMsg.startsWith('Saved') ? 'text-emerald-400' : 'text-red-400')}>
-          {publicBalanceMsg}
-        </p>
-      )}
-    </div>
-  </div>
-)}     
+              </thead>
+              <tbody className="divide-y divide-slate-800 text-xs">
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="p-6 text-center text-slate-500">No users signed up yet.</td>
+                  </tr>
+                ) : (
+                  users.map((u) => {
+                    const editValue = balanceEdits[u.id] !== undefined ? balanceEdits[u.id] : String(u.walletBalance);
+                    const isSaving = savingUserId === u.id;
+                    return (
+                      <tr key={u.id} className="hover:bg-slate-800/30">
+                        <td className="p-4 font-sans truncate max-w-[140px]">{u.name}</td>
+                        <td className="p-4 font-mono truncate max-w-[180px]">
+                          <a href={'mailto:' + u.email} className="text-blue-400 hover:text-blue-300 underline">
+                            {u.email}
+                          </a>
+                        </td>
+                        <td className="p-4 font-mono">{u.phone}</td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-500 font-sans">$</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={editValue}
+                              onChange={(e) =>
+                                setBalanceEdits((prev) => ({ ...prev, [u.id]: e.target.value }))
+                              }
+                              className="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-emerald-400 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            />
+                          </div>
+                        </td>
+                        <td className="p-4 text-slate-500 font-sans">{new Date(u.createdAt).toLocaleDateString()}</td>
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => handleSaveBalance(u.id)}
+                            disabled={isSaving}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 font-sans"
+                          >
+                            {isSaving ? 'Saving...' : 'Save'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {activeTab === 'requests' && (
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
@@ -518,65 +485,97 @@ export default function DashboardView({ adminAddress, onLogout }) {
         )}
 
         {activeTab === 'create' && (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md mx-auto shadow-xl">
-            <h3 className="text-lg font-bold text-white mb-4">Generate Customer Payment Link</h3>
-            <form onSubmit={handleGenerateInvoice} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-2">Customer Name</label>
-                <input
-                  type="text"
-                  placeholder="Jane Doe"
-                  value={newPayerName}
-                  onChange={(e) => setNewPayerName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-2">Customer Email</label>
-                <input
-                  type="email"
-                  placeholder="jane@example.com"
-                  value={newPayerEmail}
-                  onChange={(e) => setNewPayerEmail(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-2">Invoice Amount (USDT)</label>
+          <div className="max-w-md mx-auto space-y-6">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+              <h3 className="text-lg font-bold text-white mb-1">Public Site Balance</h3>
+              <p className="text-xs text-slate-500 mb-4">
+                This number is shown publicly on the homepage to every visitor.
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 font-mono">$</span>
                 <input
                   type="number"
                   step="0.01"
-                  min="0.1"
-                  placeholder="100.00"
-                  value={newAmount}
-                  onChange={(e) => setNewAmount(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-mono focus:ring-2 focus:ring-purple-500 outline-none"
-                  required
+                  min="0"
+                  value={publicBalance}
+                  onChange={(e) => setPublicBalance(e.target.value)}
+                  className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-emerald-400 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
+                <button
+                  onClick={handleSavePublicBalance}
+                  disabled={savingPublicBalance}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50"
+                >
+                  {savingPublicBalance ? 'Saving...' : 'Update'}
+                </button>
               </div>
+              {publicBalanceMsg && (
+                <p className={'text-xs mt-2 ' + (publicBalanceMsg.startsWith('Saved') ? 'text-emerald-400' : 'text-red-400')}>
+                  {publicBalanceMsg}
+                </p>
+              )}
+            </div>
 
-              {createError && <p className="text-red-400 text-sm bg-red-950/50 border border-red-800 p-3 rounded-lg">{createError}</p>}
-
-              <button type="submit" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-3 rounded-xl transition">
-                Create Link
-              </button>
-            </form>
-
-            {createdLink && (
-              <div className="mt-6 p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
-                <span className="text-xs text-slate-400 block font-medium">Customer Payment URL:</span>
-                <div className="flex items-center gap-2">
-                  <input type="text" readOnly value={createdLink} className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs font-mono text-purple-300 outline-none" />
-                  <a href={createdLink} target="_blank" rel="noreferrer" className="p-2 bg-purple-950 border border-purple-800 text-purple-300 rounded-lg hover:bg-purple-900">
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+              <h3 className="text-lg font-bold text-white mb-4">Generate Customer Payment Link</h3>
+              <form onSubmit={handleGenerateInvoice} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-2">Customer Name</label>
+                  <input
+                    type="text"
+                    placeholder="Jane Doe"
+                    value={newPayerName}
+                    onChange={(e) => setNewPayerName(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                    required
+                  />
                 </div>
-              </div>
-            )}
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-2">Customer Email</label>
+                  <input
+                    type="email"
+                    placeholder="jane@example.com"
+                    value={newPayerEmail}
+                    onChange={(e) => setNewPayerEmail(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-2">Invoice Amount (USDT)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.1"
+                    placeholder="100.00"
+                    value={newAmount}
+                    onChange={(e) => setNewAmount(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-mono focus:ring-2 focus:ring-purple-500 outline-none"
+                    required
+                  />
+                </div>
+
+                {createError && <p className="text-red-400 text-sm bg-red-950/50 border border-red-800 p-3 rounded-lg">{createError}</p>}
+
+                <button type="submit" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-3 rounded-xl transition">
+                  Create Link
+                </button>
+              </form>
+
+              {createdLink && (
+                <div className="mt-6 p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+                  <span className="text-xs text-slate-400 block font-medium">Customer Payment URL:</span>
+                  <div className="flex items-center gap-2">
+                    <input type="text" readOnly value={createdLink} className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs font-mono text-purple-300 outline-none" />
+                    <a href={createdLink} target="_blank" rel="noreferrer" className="p-2 bg-purple-950 border border-purple-800 text-purple-300 rounded-lg hover:bg-purple-900">
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
