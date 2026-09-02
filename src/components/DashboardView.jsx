@@ -338,7 +338,6 @@ export default function DashboardView({ adminAddress, onLogout }) {
                 <tr>
                   <th className="p-4">Name</th>
                   <th className="p-4">Email</th>
-                  <th className="p-4">Phone</th>
                   <th className="p-4">Wallet Balance</th>
                   <th className="p-4">Signed Up</th>
                   <th className="p-4 text-right">Actions</th>
@@ -347,7 +346,7 @@ export default function DashboardView({ adminAddress, onLogout }) {
               <tbody className="divide-y divide-slate-800 text-xs">
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="p-6 text-center text-slate-500">No users signed up yet.</td>
+                    <td colSpan="5" className="p-6 text-center text-slate-500">No users signed up yet.</td>
                   </tr>
                 ) : (
                   users.map((u) => {
@@ -361,7 +360,6 @@ export default function DashboardView({ adminAddress, onLogout }) {
                             {u.email}
                           </a>
                         </td>
-                        <td className="p-4 font-mono">{u.phone}</td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             <span className="text-slate-500 font-sans">$</span>
