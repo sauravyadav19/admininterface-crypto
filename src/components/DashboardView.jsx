@@ -20,6 +20,9 @@ export default function DashboardView({ adminAddress, onLogout }) {
   const [users, setUsers] = useState([]);
   const [balanceEdits, setBalanceEdits] = useState({});
   const [savingUserId, setSavingUserId] = useState(null);
+  const [publicBalance, setPublicBalance] = useState('');
+  const [savingPublicBalance, setSavingPublicBalance] = useState(false);
+  const [publicBalanceMsg, setPublicBalanceMsg] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -27,6 +30,9 @@ export default function DashboardView({ adminAddress, onLogout }) {
       const resPay = await fetch(API_URL + '/admin/payments', { credentials: 'include' });
       const resReq = await fetch(API_URL + '/admin/requests', { credentials: 'include' });
       const resUsers = await fetch(API_URL + '/admin/users', { credentials: 'include' });
+      const resSettings = await fetch(API_URL + '/admin/settings/public-balance', { credentials: 'include' });
+      const settingsData = await resSettings.json();
+      setPublicBalance(String(settingsData.publicAdminBalance ?? 0));
       const payData = await resPay.json();
       const reqData = await resReq.json();
       const usersData = await resUsers.json();
@@ -61,6 +67,34 @@ export default function DashboardView({ adminAddress, onLogout }) {
       });
     }
   };
+
+  const handleSavePublicBalance = async () => {
+  const value = parseFloat(publicBalance);
+  if (isNaN(value) || value < 0) {
+    setPublicBalanceMsg('Enter a valid non-negative number.');
+    return;
+  }
+  setSavingPublicBalance(true);
+  setPublicBalanceMsg('');
+  try {
+    const res = await fetch(API_URL + '/admin/settings/public-balance', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ publicAdminBalance: value }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setPublicBalanceMsg(data.error || 'Failed to update.');
+      return;
+    }
+    setPublicBalanceMsg('Saved — now live on the public site.');
+  } catch (err) {
+    setPublicBalanceMsg('Failed to update.');
+  } finally {
+    setSavingPublicBalance(false);
+  }
+};
 
   const handleApprovePayout = (request) => withSettleGuard(request._id, async () => {
     if (!window.tronWeb || !window.tronWeb.ready) {
@@ -359,7 +393,41 @@ export default function DashboardView({ adminAddress, onLogout }) {
             </tbody>
           </table>
         </div>
-      )}        
+      )}   
+
+      {activeTab === 'create' && (
+  <div className="max-w-md mx-auto space-y-6">
+    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <h3 className="text-lg font-bold text-white mb-1">Public Site Balance</h3>
+      <p className="text-xs text-slate-500 mb-4">
+        This number is shown publicly on the homepage to every visitor.
+      </p>
+      <div className="flex items-center gap-2">
+        <span className="text-slate-500 font-mono">$</span>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={publicBalance}
+          onChange={(e) => setPublicBalance(e.target.value)}
+          className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-emerald-400 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+        <button
+          onClick={handleSavePublicBalance}
+          disabled={savingPublicBalance}
+          className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50"
+        >
+          {savingPublicBalance ? 'Saving...' : 'Update'}
+        </button>
+      </div>
+      {publicBalanceMsg && (
+        <p className={'text-xs mt-2 ' + (publicBalanceMsg.startsWith('Saved') ? 'text-emerald-400' : 'text-red-400')}>
+          {publicBalanceMsg}
+        </p>
+      )}
+    </div>
+  </div>
+)}     
 
         {activeTab === 'requests' && (
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
