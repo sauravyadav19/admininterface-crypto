@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, X, RefreshCw, PlusCircle, ExternalLink, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Check, X, RefreshCw, PlusCircle, ExternalLink, ArrowUpRight, ArrowDownLeft, Users } from 'lucide-react';
 import { explorerTxUrl, explorerAddressUrl } from '../utils/explorer';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -17,16 +17,22 @@ export default function DashboardView({ adminAddress, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [settlingIds, setSettlingIds] = useState(new Set());
   const [createdLink, setCreatedLink] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [balanceEdits, setBalanceEdits] = useState({});
+  const [savingUserId, setSavingUserId] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const resPay = await fetch(API_URL + '/admin/payments', { credentials: 'include' });
       const resReq = await fetch(API_URL + '/admin/requests', { credentials: 'include' });
+      const resUsers = await fetch(API_URL + '/admin/users', { credentials: 'include' });
       const payData = await resPay.json();
       const reqData = await resReq.json();
+      const usersData = await resUsers.json();
       setPayments(payData || []);
       setRequests(reqData || []);
+      setUsers(usersData || []);
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     } finally {
@@ -87,6 +93,36 @@ export default function DashboardView({ adminAddress, onLogout }) {
       alert('Payout rejected or failed: ' + (err.message || err));
     }
   });
+
+  const handleSaveBalance = async (userId) => {
+  const raw = balanceEdits[userId];
+  const value = parseFloat(raw);
+  if (isNaN(value) || value < 0) {
+    alert('Enter a valid non-negative number.');
+    return;
+  }
+
+  setSavingUserId(userId);
+  try {
+    const res = await fetch(API_URL + '/admin/users/' + userId + '/balance', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ walletBalance: value }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || 'Failed to update balance');
+      return;
+    }
+    fetchData();
+  } catch (err) {
+    console.error(err);
+    alert('Failed to update balance.');
+  } finally {
+    setSavingUserId(null);
+  }
+};
 
   const handleRejectPayout = (id) => withSettleGuard(id, async () => {
     if (!confirm('Reject this request?')) return;
@@ -181,6 +217,11 @@ export default function DashboardView({ adminAddress, onLogout }) {
           >
             <PlusCircle className="w-4 h-4" /> Create Payment Link
           </button>
+          <button
+              onClick={() => setActiveTab('users')}
+              className={'px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ' + (activeTab === 'users' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white')}>
+              <Users className="w-4 h-4" /> Users ({users.length})
+          </button>
         </div>
 
         {activeTab === 'incoming' && (
@@ -254,6 +295,71 @@ export default function DashboardView({ adminAddress, onLogout }) {
             </table>
           </div>
         )}
+
+      {activeTab === 'users' && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-800/50 text-slate-400 border-b border-slate-800">
+              <tr>
+                <th className="p-4">Name</th>
+                <th className="p-4">Email</th>
+                <th className="p-4">Phone</th>
+                <th className="p-4">Wallet Balance</th>
+                <th className="p-4">Signed Up</th>
+                <th className="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800 text-xs">
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="p-6 text-center text-slate-500">No users signed up yet.</td>
+                </tr>
+              ) : (
+                users.map((u) => {
+                  const editValue = balanceEdits[u.id] !== undefined ? balanceEdits[u.id] : String(u.walletBalance);
+                  const isSaving = savingUserId === u.id;
+                  return (
+                    <tr key={u.id} className="hover:bg-slate-800/30">
+                      <td className="p-4 font-sans truncate max-w-[140px]">{u.name}</td>
+                      <td className="p-4 font-mono truncate max-w-[180px]">
+                        <a href={'mailto:' + u.email} className="text-blue-400 hover:text-blue-300 underline">
+                          {u.email}
+                        </a>
+                      </td>
+                      <td className="p-4 font-mono">{u.phone}</td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500 font-sans">$</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={editValue}
+                            onChange={(e) =>
+                              setBalanceEdits((prev) => ({ ...prev, [u.id]: e.target.value }))
+                            }
+                            className="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-emerald-400 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        </div>
+                      </td>
+                      <td className="p-4 text-slate-500 font-sans">{new Date(u.createdAt).toLocaleDateString()}</td>
+                      <td className="p-4 text-right">
+                        <button
+                          onClick={() => handleSaveBalance(u.id)}
+                          disabled={isSaving}
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 font-sans"
+                        >
+                          {isSaving ? 'Saving...' : 'Save'}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}        
 
         {activeTab === 'requests' && (
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
